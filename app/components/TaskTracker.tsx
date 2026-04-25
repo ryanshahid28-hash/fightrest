@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, ReactNode } from "react";
+import { useState, useMemo, useEffect, useCallback, ReactNode } from "react";
 import { motion, AnimatePresence, LayoutGroup, Reorder, useDragControls } from "framer-motion";
 import {
   ChevronDown,
@@ -13,7 +13,8 @@ import {
   Music,
   CheckSquare,
   Check,
-  GripVertical
+  GripVertical,
+  ArrowLeft
 } from "lucide-react";
 
 /* ── Types ────────────────────────────────── */
@@ -43,14 +44,45 @@ const SPRING = { type: "spring" as const, mass: 0.8, stiffness: 180, damping: 20
 const SPRING_SOFT = { type: "spring" as const, mass: 0.6, stiffness: 130, damping: 16 };
 
 /* ── Date helper ──────────────────────────── */
-function formatDate() {
-  const d = new Date();
-  const days = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
-  const months = [
-    "january", "february", "march", "april", "may", "june",
-    "july", "august", "september", "october", "november", "december",
-  ];
-  return `${days[d.getDay()]}, ${months[d.getMonth()]} ${d.getDate()}`;
+const DAYS = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+const MONTHS = [
+  "january", "february", "march", "april", "may", "june",
+  "july", "august", "september", "october", "november", "december",
+];
+
+function formatDateFromKey(dateKey: string) {
+  const [y, m, d] = dateKey.split("-").map(Number);
+  const date = new Date(y, m - 1, d);
+  return `${DAYS[date.getDay()]}, ${MONTHS[date.getMonth()]} ${date.getDate()}`;
+}
+
+/* ── LocalStorage helpers ────────────────── */
+const STORAGE_PREFIX = "fc-tasks-";
+
+function loadTasks(dateKey: string): Task[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(STORAGE_PREFIX + dateKey);
+    if (!raw) return [];
+    return JSON.parse(raw);
+  } catch {
+    return [];
+  }
+}
+
+function saveTasks(dateKey: string, tasks: Task[]) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(STORAGE_PREFIX + dateKey, JSON.stringify(tasks));
+  } catch {
+    // storage full — silently ignore
+  }
+}
+
+/* ── Props ────────────────────────────────── */
+interface TaskTrackerProps {
+  dateKey: string;
+  onBack: () => void;
 }
 
 /* ── Modular Draggable Wrapper Component ──── */
@@ -124,12 +156,23 @@ function DraggableTaskWrapper({
 }
 
 /* ── Component ────────────────────────────── */
-export default function TaskTracker() {
-  const [tasks, setTasks] = useState<Task[]>([]);
+export default function TaskTracker({ dateKey, onBack }: TaskTrackerProps) {
+  const [tasks, setTasks] = useState<Task[]>(() => loadTasks(dateKey));
   const [input, setInput] = useState("");
   const [endOfDay, setEndOfDay] = useState(false);
 
+  // Persist tasks to localStorage whenever they change
+  useEffect(() => {
+    saveTasks(dateKey, tasks);
+  }, [tasks, dateKey]);
+
+  // Reload tasks when dateKey changes
+  useEffect(() => {
+    setTasks(loadTasks(dateKey));
+  }, [dateKey]);
+
   const completedCount = useMemo(() => tasks.filter((t) => t.completed).length, [tasks]);
+  const formattedDate = useMemo(() => formatDateFromKey(dateKey), [dateKey]);
 
   /* ── Task CRUD ──────────────────────────── */
   const addTask = () => {
@@ -381,13 +424,24 @@ export default function TaskTracker() {
 
   return (
     <div className="w-full max-w-2xl mx-auto px-4 pt-12 pb-20 relative z-10">
+      {/* ── Back Button ─────────────────────── */}
+      <motion.button
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={SPRING_SOFT}
+        onClick={onBack}
+        className="absolute top-4 left-4 p-2 rounded-xl text-white/30 hover:text-white/80 hover:bg-white/5 transition-colors z-20"
+      >
+        <ArrowLeft size={20} />
+      </motion.button>
+
       {/* ── Title ───────────────────────────── */}
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={SPRING_SOFT} className="text-center mb-8">
         <h1 className="fc-title">Fight Club</h1>
         <div className="fc-subtitle">
           <span className="fc-rule" />
           <span className="text-white/40 text-xs tracking-[0.25em] uppercase font-mono">
-            {formatDate()}
+            {formattedDate}
           </span>
           <span className="fc-rule" />
         </div>
