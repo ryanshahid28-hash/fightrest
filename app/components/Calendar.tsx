@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, ChevronRight, CalendarDays, Smile } from "lucide-react";
+import { ChevronLeft, ChevronRight, CalendarDays, Smile, Ban } from "lucide-react";
 
 /* ── Spring configs ───────────────────────── */
 const SPRING = { type: "spring" as const, mass: 0.8, stiffness: 180, damping: 20 };
@@ -17,6 +17,7 @@ const MONTH_NAMES = [
 interface CalendarProps {
   onSelectDate: (dateKey: string) => void;
   onOpenHappy: () => void;
+  onOpenAnti: () => void;
 }
 
 function getDaysInMonth(year: number, month: number) {
@@ -49,7 +50,7 @@ function dateHasTasks(dateKey: string): boolean {
   }
 }
 
-export default function Calendar({ onSelectDate, onOpenHappy }: CalendarProps) {
+export default function Calendar({ onSelectDate, onOpenHappy, onOpenAnti }: CalendarProps) {
   const today = new Date();
   const [viewYear, setViewYear] = useState(today.getFullYear());
   const [viewMonth, setViewMonth] = useState(today.getMonth());
@@ -261,6 +262,15 @@ export default function Calendar({ onSelectDate, onOpenHappy }: CalendarProps) {
         >
           <Smile size={16} />
           Happy
+        </motion.button>
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={onOpenAnti}
+          className="ml-3 px-5 py-3 rounded-xl text-rose-900/50 hover:text-rose-800 font-bold text-sm tracking-wider uppercase border border-rose-900/10 hover:border-rose-900/30 hover:bg-rose-950/10 transition-colors inline-flex items-center gap-2"
+        >
+          <Ban size={16} />
+          Ignore
         </motion.button>
       </motion.div>
 
