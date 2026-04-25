@@ -157,19 +157,23 @@ function DraggableTaskWrapper({
 
 /* ── Component ────────────────────────────── */
 export default function TaskTracker({ dateKey, onBack }: TaskTrackerProps) {
-  const [tasks, setTasks] = useState<Task[]>(() => loadTasks(dateKey));
+  const [tasks, setTasks] = useState<Task[]>([]);
   const [input, setInput] = useState("");
   const [endOfDay, setEndOfDay] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Reload tasks when dateKey changes or on first mount
+  useEffect(() => {
+    setTasks(loadTasks(dateKey));
+    setIsMounted(true);
+  }, [dateKey]);
 
   // Persist tasks to localStorage whenever they change
   useEffect(() => {
-    saveTasks(dateKey, tasks);
-  }, [tasks, dateKey]);
-
-  // Reload tasks when dateKey changes
-  useEffect(() => {
-    setTasks(loadTasks(dateKey));
-  }, [dateKey]);
+    if (isMounted) {
+      saveTasks(dateKey, tasks);
+    }
+  }, [tasks, dateKey, isMounted]);
 
   const completedCount = useMemo(() => tasks.filter((t) => t.completed).length, [tasks]);
   const formattedDate = useMemo(() => formatDateFromKey(dateKey), [dateKey]);

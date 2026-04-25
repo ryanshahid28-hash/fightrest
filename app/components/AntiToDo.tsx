@@ -40,12 +40,18 @@ interface AntiToDoProps {
 }
 
 export default function AntiToDo({ onBack }: AntiToDoProps) {
-  const [items, setItems] = useState<IgnoredItem[]>(() => loadItems());
+  const [items, setItems] = useState<IgnoredItem[]>([]);
   const [input, setInput] = useState("");
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
-    saveItems(items);
-  }, [items]);
+    setItems(loadItems());
+    setIsMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (isMounted) saveItems(items);
+  }, [items, isMounted]);
 
   const addItem = () => {
     const trimmed = input.trim();

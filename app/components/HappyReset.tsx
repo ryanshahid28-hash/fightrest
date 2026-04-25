@@ -40,12 +40,18 @@ interface HappyResetProps {
 }
 
 export default function HappyReset({ onBack }: HappyResetProps) {
-  const [items, setItems] = useState<HappyItem[]>(() => loadItems());
+  const [items, setItems] = useState<HappyItem[]>([]);
   const [input, setInput] = useState("");
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
-    saveItems(items);
-  }, [items]);
+    setItems(loadItems());
+    setIsMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (isMounted) saveItems(items);
+  }, [items, isMounted]);
 
   const addItem = () => {
     const trimmed = input.trim();
