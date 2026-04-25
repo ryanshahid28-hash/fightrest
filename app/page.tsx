@@ -4,25 +4,40 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import TaskTracker from "./components/TaskTracker";
 import Calendar from "./components/Calendar";
+import HappyReset from "./components/HappyReset";
 
 const SPRING_SOFT = { type: "spring" as const, mass: 0.6, stiffness: 130, damping: 16 };
 
+type View = "calendar" | "tracker" | "happy";
+
 export default function Home() {
-  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [view, setView] = useState<View>("calendar");
+  const [selectedDate, setSelectedDate] = useState<string>("");
+
+  const goToCalendar = () => setView("calendar");
+
+  const goToTracker = (dateKey: string) => {
+    setSelectedDate(dateKey);
+    setView("tracker");
+  };
+
+  const goToHappy = () => setView("happy");
 
   return (
     <main className="relative min-h-screen flex flex-col items-center justify-start">
-      {/* Animated mesh background */}
-      <div className="bg-mesh">
-        <div className="bg-mesh-extra" />
-      </div>
+      {/* Animated mesh background — hidden on HappyReset for pure black */}
+      {view !== "happy" && (
+        <>
+          <div className="bg-mesh">
+            <div className="bg-mesh-extra" />
+          </div>
+          <div className="noise-overlay" />
+        </>
+      )}
 
-      {/* Noise texture overlay */}
-      <div className="noise-overlay" />
-
-      {/* Main content — crossfade between Calendar and TaskTracker */}
+      {/* Main content — crossfade between views */}
       <AnimatePresence mode="wait">
-        {selectedDate === null ? (
+        {view === "calendar" && (
           <motion.div
             key="calendar"
             initial={{ opacity: 0, y: 20 }}
@@ -31,9 +46,11 @@ export default function Home() {
             transition={SPRING_SOFT}
             className="w-full"
           >
-            <Calendar onSelectDate={(dateKey) => setSelectedDate(dateKey)} />
+            <Calendar onSelectDate={goToTracker} onOpenHappy={goToHappy} />
           </motion.div>
-        ) : (
+        )}
+
+        {view === "tracker" && (
           <motion.div
             key="tracker"
             initial={{ opacity: 0, y: 20 }}
@@ -42,7 +59,20 @@ export default function Home() {
             transition={SPRING_SOFT}
             className="w-full"
           >
-            <TaskTracker dateKey={selectedDate} onBack={() => setSelectedDate(null)} />
+            <TaskTracker dateKey={selectedDate} onBack={goToCalendar} />
+          </motion.div>
+        )}
+
+        {view === "happy" && (
+          <motion.div
+            key="happy"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={SPRING_SOFT}
+            className="w-full"
+          >
+            <HappyReset onBack={goToCalendar} />
           </motion.div>
         )}
       </AnimatePresence>

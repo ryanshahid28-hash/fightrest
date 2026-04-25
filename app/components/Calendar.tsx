@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, ChevronRight, CalendarDays } from "lucide-react";
+import { ChevronLeft, ChevronRight, CalendarDays, Smile } from "lucide-react";
 
 /* ── Spring configs ───────────────────────── */
 const SPRING = { type: "spring" as const, mass: 0.8, stiffness: 180, damping: 20 };
@@ -16,6 +16,7 @@ const MONTH_NAMES = [
 
 interface CalendarProps {
   onSelectDate: (dateKey: string) => void;
+  onOpenHappy: () => void;
 }
 
 function getDaysInMonth(year: number, month: number) {
@@ -48,7 +49,7 @@ function dateHasTasks(dateKey: string): boolean {
   }
 }
 
-export default function Calendar({ onSelectDate }: CalendarProps) {
+export default function Calendar({ onSelectDate, onOpenHappy }: CalendarProps) {
   const today = new Date();
   const [viewYear, setViewYear] = useState(today.getFullYear());
   const [viewMonth, setViewMonth] = useState(today.getMonth());
@@ -251,6 +252,15 @@ export default function Calendar({ onSelectDate }: CalendarProps) {
           className="fc-add-btn px-6 py-3 rounded-xl text-white font-bold text-sm tracking-wider uppercase"
         >
           Fight Today
+        </motion.button>
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={onOpenHappy}
+          className="ml-3 px-5 py-3 rounded-xl text-white/50 hover:text-white font-bold text-sm tracking-wider uppercase border border-white/10 hover:border-white/20 hover:bg-white/5 transition-colors inline-flex items-center gap-2"
+        >
+          <Smile size={16} />
+          Happy
         </motion.button>
       </motion.div>
 
