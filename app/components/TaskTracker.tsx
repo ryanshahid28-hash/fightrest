@@ -14,8 +14,11 @@ import {
   CheckSquare,
   Check,
   GripVertical,
-  ArrowLeft
+  ArrowLeft,
+  CalendarPlus,
+  Clock
 } from "lucide-react";
+import { generateCalendarEvent } from "@/lib/generateCalendarEvent";
 
 /* ── Types ────────────────────────────────── */
 interface TodoItem {
@@ -161,6 +164,8 @@ export default function TaskTracker({ dateKey, onBack }: TaskTrackerProps) {
   const [input, setInput] = useState("");
   const [endOfDay, setEndOfDay] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [taskTimes, setTaskTimes] = useState<Record<string, string>>({});
+  const [showTimePicker, setShowTimePicker] = useState<string | null>(null);
 
   // Reload tasks when dateKey changes or on first mount
   useEffect(() => {
@@ -585,6 +590,19 @@ export default function TaskTracker({ dateKey, onBack }: TaskTrackerProps) {
                         {task.text}
                       </span>
 
+                      {/* Calendar Sync */}
+                      <button
+                        onClick={() => setShowTimePicker(showTimePicker === task.id ? null : task.id)}
+                        className={`relative p-1 transition-colors ${
+                          taskTimes[task.id]
+                            ? "text-pink-400 hover:text-pink-300"
+                            : "text-white/30 hover:text-white/70"
+                        }`}
+                        title="Sync to calendar"
+                      >
+                        <CalendarPlus size={18} />
+                      </button>
+
                       {/* Expand / Collapse */}
                       <button
                         onClick={() => handlers.toggleExpand(task.id)}
@@ -601,6 +619,46 @@ export default function TaskTracker({ dateKey, onBack }: TaskTrackerProps) {
                         <Trash2 size={18} />
                       </button>
                     </div>
+
+                    {/* Calendar Time Picker */}
+                    <AnimatePresence>
+                      {showTimePicker === task.id && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={SPRING_SOFT}
+                          className="overflow-hidden"
+                        >
+                          <div className="px-4 pb-3 flex items-center gap-3">
+                            <Clock size={14} className="text-white/30 shrink-0" />
+                            <input
+                              type="time"
+                              value={taskTimes[task.id] || ""}
+                              onChange={(e) =>
+                                setTaskTimes((prev) => ({ ...prev, [task.id]: e.target.value }))
+                              }
+                              className="glass-input px-3 py-1.5 text-sm text-white/80 font-mono bg-white/5 border border-white/10 rounded-lg focus:border-pink-500/50 focus:outline-none transition-colors [color-scheme:dark]"
+                            />
+                            <button
+                              onClick={() => {
+                                const time = taskTimes[task.id];
+                                if (!time) return;
+                                generateCalendarEvent(task.text, dateKey, time);
+                                setShowTimePicker(null);
+                              }}
+                              disabled={!taskTimes[task.id]}
+                              className="fc-add-btn px-3 py-1.5 rounded-lg text-white text-xs font-bold tracking-wider uppercase disabled:opacity-30 disabled:cursor-not-allowed transition-opacity"
+                            >
+                              Sync
+                            </button>
+                            <span className="text-white/20 text-[10px] font-mono hidden sm:inline">
+                              → downloads .ics
+                            </span>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
 
                     {/* Expandable content panel */}
                     <AnimatePresence>
