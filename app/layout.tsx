@@ -13,9 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Fight Club — Task Tracker",
+  title: "Fight Club — Daily Productivity Companion",
   description:
-    "A glassmorphic, dark-mode task tracker built with Next.js, Tailwind CSS, and Framer Motion.",
+    "A glassmorphic, dark-mode daily productivity companion with task tracking, habit streaks, mood insights, and cloud sync. Built with Next.js, Tailwind CSS, and Framer Motion.",
 };
 
 export default function RootLayout({
@@ -27,7 +27,7 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased dark`}
+      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased dark theme-fight`}
     >
       <body suppressHydrationWarning className="min-h-full flex flex-col">{children}</body>
     </html>

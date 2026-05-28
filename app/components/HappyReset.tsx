@@ -1,38 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Trash2, Check } from "lucide-react";
-
-/* ── Types ────────────────────────────────── */
-interface HappyItem {
-  id: string;
-  text: string;
-  checked?: boolean;
-}
-
-/* ── LocalStorage helpers ────────────────── */
-const STORAGE_KEY = "fc-happy-list";
-
-function loadItems(): HappyItem[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
-    return JSON.parse(raw);
-  } catch {
-    return [];
-  }
-}
-
-function saveItems(items: HappyItem[]) {
-  if (typeof window === "undefined") return;
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-  } catch {
-    // silently ignore
-  }
-}
+import { Check } from "lucide-react";
+import { useHappyList } from "@/lib/hooks/useHappyList";
+import EditableListItem from "./EditableListItem";
 
 /* ── Component ────────────────────────────── */
 interface HappyResetProps {
@@ -40,32 +12,14 @@ interface HappyResetProps {
 }
 
 export default function HappyReset({ onBack }: HappyResetProps) {
-  const [items, setItems] = useState<HappyItem[]>([]);
+  const { items, isLoading, addItem, removeItem, toggleItem, updateItem } = useHappyList();
   const [input, setInput] = useState("");
-  const [isMounted, setIsMounted] = useState(false);
 
-  useEffect(() => {
-    setItems(loadItems());
-    setIsMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (isMounted) saveItems(items);
-  }, [items, isMounted]);
-
-  const addItem = () => {
+  const handleAdd = () => {
     const trimmed = input.trim();
     if (!trimmed) return;
-    setItems([...items, { id: crypto.randomUUID(), text: trimmed, checked: false }]);
+    addItem(trimmed);
     setInput("");
-  };
-
-  const removeItem = (id: string) => {
-    setItems(items.filter((i) => i.id !== id));
-  };
-
-  const toggleItem = (id: string) => {
-    setItems(items.map((i) => (i.id === id ? { ...i, checked: !i.checked } : i)));
   };
 
   return (
@@ -111,67 +65,71 @@ export default function HappyReset({ onBack }: HappyResetProps) {
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && addItem()}
+              onKeyDown={(e) => e.key === "Enter" && handleAdd()}
               placeholder="...coding / listening to Yuvan / at the gym"
               className="w-full bg-transparent border-b border-white/15 pb-3 text-white text-sm sm:text-base font-mono placeholder-white/20 focus:outline-none focus:border-white/40 transition-colors"
             />
           </motion.div>
 
-          {/* List */}
-          <div className="space-y-0">
-            <AnimatePresence mode="popLayout">
-              {items.map((item) => (
-                <motion.div
-                  key={item.id}
-                  initial={{ opacity: 0, x: -20, height: 0 }}
-                  animate={{ opacity: 1, x: 0, height: "auto" }}
-                  exit={{ opacity: 0, x: 20, height: 0 }}
-                  transition={{ type: "spring", mass: 0.5, stiffness: 200, damping: 20 }}
-                  className="group"
-                >
-                  <div className="flex items-center gap-3 py-3 border-b border-white/5">
-                    <button
-                      onClick={() => toggleItem(item.id)}
-                      className={`w-5 h-5 flex flex-shrink-0 items-center justify-center rounded-sm border transition-colors ${
-                        item.checked
-                          ? "bg-white text-black border-white"
-                          : "border-white/30 text-transparent hover:border-white/60"
-                      }`}
-                    >
-                      <Check size={14} strokeWidth={3} />
-                    </button>
-                    <span
-                      className={`flex-1 text-sm sm:text-base font-mono transition-opacity duration-300 ${
-                        item.checked ? "text-white/30 line-through" : "text-white"
-                      }`}
-                    >
-                      {item.text}
-                    </span>
-                    <button
-                      onClick={() => removeItem(item.id)}
-                      className="opacity-0 group-hover:opacity-50 hover:!opacity-100 text-white transition-opacity p-1"
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
-                </motion.div>
+          {/* Loading state */}
+          {isLoading ? (
+            <div className="space-y-3">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="h-10 bg-white/3 rounded animate-pulse" />
               ))}
-            </AnimatePresence>
-          </div>
+            </div>
+          ) : (
+            <>
+              {/* List */}
+              <div className="space-y-0">
+                <AnimatePresence mode="popLayout">
+                  {items.map((item) => (
+                    <motion.div
+                      key={item.id}
+                      initial={{ opacity: 0, x: -20, height: 0 }}
+                      animate={{ opacity: 1, x: 0, height: "auto" }}
+                      exit={{ opacity: 0, x: 20, height: 0 }}
+                      transition={{ type: "spring", mass: 0.5, stiffness: 200, damping: 20 }}
+                      className="group"
+                    >
+                      <div className="flex items-center gap-3 py-3 border-b border-white/5">
+                        <button
+                          onClick={() => toggleItem(item.id)}
+                          className={`w-5 h-5 flex flex-shrink-0 items-center justify-center rounded-sm border transition-colors ${
+                            item.checked
+                              ? "bg-white text-black border-white"
+                              : "border-white/30 text-transparent hover:border-white/60"
+                          }`}
+                        >
+                          <Check size={14} strokeWidth={3} />
+                        </button>
+                        <EditableListItem
+                          initialText={item.text}
+                          onSave={(newText) => updateItem(item.id, newText)}
+                          onDelete={() => removeItem(item.id)}
+                          textClassName={item.checked ? "text-white/30 line-through" : "text-white"}
+                        />
+                      </div>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </div>
 
-          {/* Empty state */}
-          <AnimatePresence>
-            {items.length === 0 && (
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="text-center text-white/10 text-xs font-mono tracking-wider mt-8 select-none"
-              >
-                type something that makes you alive. press enter.
-              </motion.p>
-            )}
-          </AnimatePresence>
+              {/* Empty state */}
+              <AnimatePresence>
+                {items.length === 0 && (
+                  <motion.p
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="text-center text-white/10 text-xs font-mono tracking-wider mt-8 select-none"
+                  >
+                    type something that makes you alive. press enter.
+                  </motion.p>
+                )}
+              </AnimatePresence>
+            </>
+          )}
         </div>
 
         {/* Tagline */}

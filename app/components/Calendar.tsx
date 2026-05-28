@@ -1,11 +1,13 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, ChevronRight, CalendarDays, Smile, Ban } from "lucide-react";
+import { ChevronLeft, ChevronRight, CalendarDays, Smile, Ban, Sparkles, Wind } from "lucide-react";
+import { useUser } from "@/lib/auth";
+import { useHappyList } from "@/lib/hooks/useHappyList";
+import { supabase } from "@/lib/supabase";
 
 /* ── Spring configs ───────────────────────── */
-const SPRING = { type: "spring" as const, mass: 0.8, stiffness: 180, damping: 20 };
 const SPRING_SOFT = { type: "spring" as const, mass: 0.6, stiffness: 130, damping: 16 };
 
 const WEEKDAYS = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
@@ -18,6 +20,7 @@ interface CalendarProps {
   onSelectDate: (dateKey: string) => void;
   onOpenHappy: () => void;
   onOpenAnti: () => void;
+  onOpenInsights?: () => void;
 }
 
 function getDaysInMonth(year: number, month: number) {
@@ -37,8 +40,8 @@ function getTodayKey() {
   return toDateKey(d.getFullYear(), d.getMonth(), d.getDate());
 }
 
-/* ── Check if a date has tasks stored ─────── */
-function dateHasTasks(dateKey: string): boolean {
+/* ── Check if a date has tasks (localStorage fallback) ── */
+function dateHasTasksLocal(dateKey: string): boolean {
   if (typeof window === "undefined") return false;
   try {
     const raw = localStorage.getItem(`fc-tasks-${dateKey}`);
@@ -50,16 +53,54 @@ function dateHasTasks(dateKey: string): boolean {
   }
 }
 
-export default function Calendar({ onSelectDate, onOpenHappy, onOpenAnti }: CalendarProps) {
+export default function Calendar({ onSelectDate, onOpenHappy, onOpenAnti, onOpenInsights }: CalendarProps) {
+  const { user } = useUser();
+  const { items: happyItems } = useHappyList();
   const today = new Date();
   const [viewYear, setViewYear] = useState(today.getFullYear());
   const [viewMonth, setViewMonth] = useState(today.getMonth());
-  const [direction, setDirection] = useState(0); // -1 = prev, 1 = next
+  const [direction, setDirection] = useState(0);
+  const [taskDates, setTaskDates] = useState<Set<string>>(new Set());
 
   const todayKey = getTodayKey();
 
   const daysInMonth = useMemo(() => getDaysInMonth(viewYear, viewMonth), [viewYear, viewMonth]);
   const firstDay = useMemo(() => getFirstDayOfMonth(viewYear, viewMonth), [viewYear, viewMonth]);
+
+  /* ── Fetch task dates for the visible month ── */
+  const fetchTaskDates = useCallback(async () => {
+    if (!user) {
+      // Fallback to localStorage
+      const dates = new Set<string>();
+      for (let d = 1; d <= daysInMonth; d++) {
+        const dk = toDateKey(viewYear, viewMonth, d);
+        if (dateHasTasksLocal(dk)) dates.add(dk);
+      }
+      setTaskDates(dates);
+      return;
+    }
+
+    const startDate = `${viewYear}-${String(viewMonth + 1).padStart(2, "0")}-01`;
+    const endDate = `${viewYear}-${String(viewMonth + 1).padStart(2, "0")}-${String(daysInMonth).padStart(2, "0")}`;
+
+    const { data, error } = await supabase
+      .from("tasks")
+      .select("date")
+      .eq("user_id", user.id)
+      .gte("date", startDate)
+      .lte("date", endDate);
+
+    if (error) {
+      console.warn("fetchTaskDates error:", error.message);
+      return;
+    }
+
+    setTaskDates(new Set((data || []).map((r: { date: string }) => r.date)));
+  }, [user, viewYear, viewMonth, daysInMonth]);
+
+  useEffect(() => {
+    fetchTaskDates();
+  }, [fetchTaskDates]);
 
   const prevMonth = () => {
     setDirection(-1);
@@ -91,7 +132,6 @@ export default function Calendar({ onSelectDate, onOpenHappy, onOpenAnti }: Cale
   const cells: (number | null)[] = [];
   for (let i = 0; i < firstDay; i++) cells.push(null);
   for (let d = 1; d <= daysInMonth; d++) cells.push(d);
-  // Pad remaining cells to complete last row
   while (cells.length % 7 !== 0) cells.push(null);
 
   const slideVariants = {
@@ -160,7 +200,7 @@ export default function Calendar({ onSelectDate, onOpenHappy, onOpenAnti }: Cale
             </AnimatePresence>
             <button
               onClick={goToToday}
-              className="p-1.5 rounded-lg text-white/20 hover:text-pink-400 hover:bg-pink-500/10 transition-colors"
+              className="p-1.5 rounded-lg text-white/20 hover:text-[#E23D68] hover:bg-[#E23D68]/10 transition-colors"
               title="Go to today"
             >
               <CalendarDays size={16} />
@@ -206,7 +246,7 @@ export default function Calendar({ onSelectDate, onOpenHappy, onOpenAnti }: Cale
 
               const dateKey = toDateKey(viewYear, viewMonth, day);
               const isToday = dateKey === todayKey;
-              const hasTasks = dateHasTasks(dateKey);
+              const hasTasks = taskDates.has(dateKey);
 
               return (
                 <motion.button
@@ -218,19 +258,14 @@ export default function Calendar({ onSelectDate, onOpenHappy, onOpenAnti }: Cale
                     aspect-square rounded-xl flex flex-col items-center justify-center relative
                     font-mono text-sm transition-colors duration-300 cursor-pointer
                     ${isToday
-                      ? "bg-pink-500/15 text-pink-400 font-bold border border-pink-500/30 shadow-[0_0_16px_rgba(236,72,153,0.2)]"
+                      ? "fc-add-btn text-white font-bold shadow-[0_4px_24px_rgba(226,61,104,0.6)]"
                       : "text-white/50 hover:text-white/90 hover:bg-white/5 border border-transparent"
                     }
                   `}
                 >
                   <span>{day}</span>
-                  {/* Task indicator dot */}
                   {hasTasks && (
-                    <span className={`absolute bottom-1 w-1 h-1 rounded-full ${isToday ? "bg-pink-400" : "bg-white/30"}`} />
-                  )}
-                  {/* Today pulse ring */}
-                  {isToday && (
-                    <span className="absolute inset-0 rounded-xl animate-[pulse-ring_2s_cubic-bezier(0.4,0,0.6,1)_infinite] border border-pink-500/20" />
+                    <span className={`absolute bottom-1 w-1 h-1 rounded-full ${isToday ? "bg-white" : "bg-white/30"}`} />
                   )}
                 </motion.button>
               );
@@ -239,39 +274,65 @@ export default function Calendar({ onSelectDate, onOpenHappy, onOpenAnti }: Cale
         </AnimatePresence>
       </motion.div>
 
-      {/* ── Quick action: go to today ── */}
+      {/* ── Quick actions ── */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.25 }}
-        className="mt-6 text-center"
+        className="mt-6 flex flex-col items-center justify-center gap-4"
       >
         <motion.button
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           onClick={() => onSelectDate(todayKey)}
-          className="fc-add-btn px-6 py-3 rounded-xl text-white font-bold text-sm tracking-wider uppercase"
+          className="fc-add-btn px-8 py-3.5 rounded-xl text-white font-medium text-sm uppercase tracking-wider"
         >
           Fight Today
         </motion.button>
-        <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          onClick={onOpenHappy}
-          className="ml-3 px-5 py-3 rounded-xl text-white/50 hover:text-white font-bold text-sm tracking-wider uppercase border border-white/10 hover:border-white/20 hover:bg-white/5 transition-colors inline-flex items-center gap-2"
-        >
-          <Smile size={16} />
-          Happy
-        </motion.button>
-        <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          onClick={onOpenAnti}
-          className="ml-3 px-5 py-3 rounded-xl text-rose-900/50 hover:text-rose-800 font-bold text-sm tracking-wider uppercase border border-rose-900/10 hover:border-rose-900/30 hover:bg-rose-950/10 transition-colors inline-flex items-center gap-2"
-        >
-          <Ban size={16} />
-          Ignore
-        </motion.button>
+        
+        <div className="flex items-center justify-center gap-3">
+        <div className="relative group">
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={onOpenHappy}
+            className="fc-icon-btn p-3.5 rounded-xl text-white/80 hover:text-white border border-white/20 hover:border-white/40 transition-colors flex items-center justify-center"
+          >
+            <Smile size={18} />
+          </motion.button>
+          <span className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-xl bg-[#E23D68] text-white text-[11px] font-mono font-semibold uppercase tracking-wider whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 shadow-[0_0_12px_rgba(226,61,104,0.4)] pointer-events-none">
+            Happy List
+          </span>
+        </div>
+        <div className="relative group">
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={onOpenAnti}
+            className="fc-icon-btn p-3.5 rounded-xl text-[#E23D68]/80 hover:text-[#F68FA6] border border-[#E23D68]/20 hover:border-[#E23D68]/40 transition-colors flex items-center justify-center"
+          >
+            <Ban size={18} />
+          </motion.button>
+          <span className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-xl bg-[#E23D68] text-white text-[11px] font-mono font-semibold uppercase tracking-wider whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 shadow-[0_0_12px_rgba(226,61,104,0.4)] pointer-events-none">
+            Ignore
+          </span>
+        </div>
+        {onOpenInsights && (
+          <div className="relative group">
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={onOpenInsights}
+              className="fc-icon-btn p-3.5 rounded-xl text-amber-500/80 hover:text-amber-400 border border-amber-500/20 hover:border-amber-500/40 transition-colors flex items-center justify-center"
+            >
+              <Sparkles size={18} />
+            </motion.button>
+            <span className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-xl bg-[#E23D68] text-white text-[11px] font-mono font-semibold uppercase tracking-wider whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 shadow-[0_0_12px_rgba(226,61,104,0.4)] pointer-events-none">
+              Insights
+            </span>
+          </div>
+        )}
+        </div>
       </motion.div>
 
       {/* ── Footer ── */}
