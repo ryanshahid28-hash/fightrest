@@ -26,6 +26,7 @@ export default function LoginPage() {
     
     if (isPlaceholder) {
       // Simulate successful login for local development
+      localStorage.setItem("fc-mock-session", "true");
       router.push("/dashboard");
       return;
     }
@@ -69,13 +70,11 @@ export default function LoginPage() {
       >
         {/* Title */}
         <div className="text-center mb-10">
-          <h1 className="fc-title">Fight Club</h1>
+          <h1 className="fc-title italic text-5xl tracking-tight mb-2">FIGHT CLUB</h1>
           <div className="fc-subtitle">
-            <span className="fc-rule" />
-            <span className="text-white/40 text-xs tracking-[0.25em] uppercase font-mono">
-              enter the ring
+            <span className="text-white/60 text-sm tracking-[0.2em] uppercase font-mono">
+              ENTER THE RING
             </span>
-            <span className="fc-rule" />
           </div>
         </div>
 
@@ -86,9 +85,9 @@ export default function LoginPage() {
             <div>
               <label
                 htmlFor="login-email"
-                className="block text-white/30 text-[10px] font-mono tracking-widest uppercase mb-2"
+                className="block text-white/50 text-xs font-mono tracking-widest uppercase mb-2"
               >
-                Email
+                EMAIL
               </label>
               <input
                 id="login-email"
@@ -97,7 +96,7 @@ export default function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 autoComplete="email"
-                className="glass-input w-full px-4 py-3 text-sm text-white placeholder-white/20 font-mono outline-none"
+                className="w-full px-4 py-3 text-sm text-white bg-[#1A1A1A] border border-white/10 rounded-xl placeholder-white/20 font-mono outline-none focus:border-[#E23D68] transition-colors"
                 placeholder="fighter@club.com"
               />
             </div>
@@ -106,9 +105,9 @@ export default function LoginPage() {
             <div>
               <label
                 htmlFor="login-password"
-                className="block text-white/30 text-[10px] font-mono tracking-widest uppercase mb-2"
+                className="block text-white/50 text-xs font-mono tracking-widest uppercase mb-2"
               >
-                Password
+                PASSWORD
               </label>
               <div className="relative">
                 <input
@@ -119,7 +118,7 @@ export default function LoginPage() {
                   required
                   minLength={6}
                   autoComplete="current-password"
-                  className="glass-input w-full px-4 py-3 pr-12 text-sm text-white placeholder-white/20 font-mono outline-none"
+                  className="w-full px-4 py-3 pr-12 text-sm text-white bg-[#1A1A1A] border border-white/10 rounded-xl placeholder-white/20 font-mono outline-none focus:border-[#E23D68] transition-colors"
                   placeholder="••••••••"
                 />
                 <button
@@ -158,15 +157,19 @@ export default function LoginPage() {
               type="submit"
               disabled={submitting}
               id="login-submit"
-              className="fc-add-btn w-full px-5 py-3 rounded-xl text-white font-medium text-sm uppercase tracking-wider
-                         disabled:opacity-50 disabled:cursor-not-allowed transition-opacity
-                         flex items-center justify-center gap-2"
+              className="w-full px-5 py-4 rounded-xl text-white font-bold text-lg uppercase tracking-wider
+                         disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-[1.02]
+                         flex items-center justify-center gap-2 mt-6"
+              style={{ 
+                backgroundColor: '#E23D68', 
+                boxShadow: '0 0 20px #E23D68, 0 0 40px rgba(226, 61, 104, 0.4)',
+              }}
             >
               {submitting ? (
-                <Loader2 size={16} className="animate-spin" />
+                <Loader2 size={24} className="animate-spin" />
               ) : (
                 <>
-                  Enter <ArrowRight size={14} />
+                  ENTER -&gt;
                 </>
               )}
             </button>

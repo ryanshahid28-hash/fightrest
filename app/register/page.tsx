@@ -62,6 +62,7 @@ export default function RegisterPage() {
     
     if (isPlaceholder) {
       // Simulate successful login for local development
+      localStorage.setItem("fc-mock-session", "true");
       router.push("/dashboard");
       return;
     }

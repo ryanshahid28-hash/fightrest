@@ -32,9 +32,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Check if we are using placeholder supabase
     if (process.env.NEXT_PUBLIC_SUPABASE_URL === undefined || process.env.NEXT_PUBLIC_SUPABASE_URL.includes("placeholder")) {
-      // Mock user for local development without Supabase
-      setUser({ id: "mock-user-123", email: "fighter@club.com" } as User);
-      setSession({ user: { id: "mock-user-123", email: "fighter@club.com" } } as unknown as Session);
+      const mockSession = localStorage.getItem("fc-mock-session");
+      if (mockSession === "true") {
+        setUser({ id: "mock-user-123", email: "fighter@club.com" } as User);
+        setSession({ user: { id: "mock-user-123", email: "fighter@club.com" } } as unknown as Session);
+      } else {
+        setUser(null);
+        setSession(null);
+      }
       setLoading(false);
       return;
     }
@@ -69,6 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signOut = useCallback(async () => {
+    localStorage.removeItem("fc-mock-session");
     await supabase.auth.signOut();
     // Redirect to login page after sign out
     if (typeof window !== "undefined") {

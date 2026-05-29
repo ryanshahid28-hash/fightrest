@@ -14,12 +14,18 @@ export default function Home() {
 
   useEffect(() => {
     const checkSession = async () => {
-      // If using placeholder Supabase (local dev), go straight to dashboard
-      if (
+      const isPlaceholder =
         !process.env.NEXT_PUBLIC_SUPABASE_URL ||
-        process.env.NEXT_PUBLIC_SUPABASE_URL.includes("placeholder")
-      ) {
-        router.replace("/dashboard");
+        process.env.NEXT_PUBLIC_SUPABASE_URL.includes("placeholder");
+
+      // If using placeholder Supabase, check local storage for our mock session
+      if (isPlaceholder) {
+        const mockSession = localStorage.getItem("fc-mock-session");
+        if (mockSession === "true") {
+          router.replace("/dashboard");
+        } else {
+          router.replace("/login");
+        }
         return;
       }
 

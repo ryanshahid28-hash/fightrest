@@ -158,13 +158,11 @@ export default function Calendar({ onSelectDate, onOpenHappy, onOpenAnti, onOpen
         transition={SPRING_SOFT}
         className="text-center mb-8"
       >
-        <h1 className="fc-title">Fight Club</h1>
+        <h1 className="fc-title italic text-5xl tracking-tight mb-2">FIGHT CLUB</h1>
         <div className="fc-subtitle">
-          <span className="fc-rule" />
-          <span className="text-white/40 text-xs tracking-[0.25em] uppercase font-mono">
-            choose your day
+          <span className="text-white/60 text-sm tracking-[0.2em] uppercase font-mono">
+            CHOOSE YOUR DAY
           </span>
-          <span className="fc-rule" />
         </div>
       </motion.div>
 
@@ -258,7 +256,7 @@ export default function Calendar({ onSelectDate, onOpenHappy, onOpenAnti, onOpen
                     aspect-square rounded-xl flex flex-col items-center justify-center relative
                     font-mono text-sm transition-colors duration-300 cursor-pointer
                     ${isToday
-                      ? "fc-add-btn text-white font-bold shadow-[0_4px_24px_rgba(226,61,104,0.6)]"
+                      ? "bg-[#E23D68] text-white font-bold shadow-[0_0_20px_#E23D68] border border-[#F68FA6]/50"
                       : "text-white/50 hover:text-white/90 hover:bg-white/5 border border-transparent"
                     }
                   `}
@@ -279,26 +277,31 @@ export default function Calendar({ onSelectDate, onOpenHappy, onOpenAnti, onOpen
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.25 }}
-        className="mt-6 flex flex-col items-center justify-center gap-4"
+        className="mt-6 flex flex-col items-center justify-center gap-6"
       >
         <motion.button
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           onClick={() => onSelectDate(todayKey)}
-          className="fc-add-btn px-8 py-3.5 rounded-xl text-white font-medium text-sm uppercase tracking-wider"
+          className="px-10 py-4 rounded-xl text-white font-bold text-xl uppercase tracking-wider transition-all"
+          style={{ 
+            backgroundColor: '#E23D68', 
+            boxShadow: '0 0 20px #E23D68, 0 0 40px rgba(226, 61, 104, 0.4)',
+          }}
         >
-          Fight Today
+          FIGHT TODAY
         </motion.button>
         
-        <div className="flex items-center justify-center gap-3">
+        {/* Navigation Bar */}
+        <div className="flex items-center justify-center gap-4 w-full mt-2">
         <div className="relative group">
           <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
             onClick={onOpenHappy}
-            className="fc-icon-btn p-3.5 rounded-xl text-white/80 hover:text-white border border-white/20 hover:border-white/40 transition-colors flex items-center justify-center"
+            className="w-14 h-14 bg-[#121212] rounded-lg text-white/80 hover:text-white border border-[#333] hover:border-[#555] transition-colors flex items-center justify-center shadow-md"
           >
-            <Smile size={18} />
+            <Smile size={24} />
           </motion.button>
           <span className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-xl bg-[#E23D68] text-white text-[11px] font-mono font-semibold uppercase tracking-wider whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 shadow-[0_0_12px_rgba(226,61,104,0.4)] pointer-events-none">
             Happy List
@@ -306,12 +309,12 @@ export default function Calendar({ onSelectDate, onOpenHappy, onOpenAnti, onOpen
         </div>
         <div className="relative group">
           <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
             onClick={onOpenAnti}
-            className="fc-icon-btn p-3.5 rounded-xl text-[#E23D68]/80 hover:text-[#F68FA6] border border-[#E23D68]/20 hover:border-[#E23D68]/40 transition-colors flex items-center justify-center"
+            className="w-14 h-14 bg-[#121212] rounded-lg text-[#E23D68]/80 hover:text-[#F68FA6] border border-[#333] hover:border-[#E23D68]/50 transition-colors flex items-center justify-center shadow-md"
           >
-            <Ban size={18} />
+            <Ban size={24} />
           </motion.button>
           <span className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-xl bg-[#E23D68] text-white text-[11px] font-mono font-semibold uppercase tracking-wider whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 shadow-[0_0_12px_rgba(226,61,104,0.4)] pointer-events-none">
             Ignore
@@ -320,12 +323,12 @@ export default function Calendar({ onSelectDate, onOpenHappy, onOpenAnti, onOpen
         {onOpenInsights && (
           <div className="relative group">
             <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={onOpenInsights}
-              className="fc-icon-btn p-3.5 rounded-xl text-amber-500/80 hover:text-amber-400 border border-amber-500/20 hover:border-amber-500/40 transition-colors flex items-center justify-center"
+              className="w-14 h-14 bg-[#121212] rounded-lg text-amber-500/80 hover:text-amber-400 border border-[#333] hover:border-amber-500/50 transition-colors flex items-center justify-center shadow-md"
             >
-              <Sparkles size={18} />
+              <Sparkles size={24} />
             </motion.button>
             <span className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-xl bg-[#E23D68] text-white text-[11px] font-mono font-semibold uppercase tracking-wider whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 shadow-[0_0_12px_rgba(226,61,104,0.4)] pointer-events-none">
               Insights
