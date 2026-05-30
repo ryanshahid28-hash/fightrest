@@ -13,7 +13,7 @@ export interface TodoItem {
 
 export interface ContentBlock {
   id: string;
-  type: "text" | "image" | "link" | "music" | "todo";
+  type: "text" | "image" | "link" | "music" | "todo" | "spark";
   value: string;
   todos?: TodoItem[];
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback, ReactNode } from "react";
+import { useState, useMemo, useCallback, ReactNode, useEffect } from "react";
 import { motion, AnimatePresence, LayoutGroup, Reorder, useDragControls } from "framer-motion";
 import {
   ChevronDown,
@@ -19,6 +19,7 @@ import {
   RotateCcw,
   Pencil,
   Wind,
+  Zap,
 } from "lucide-react";
 import { generateCalendarEvent } from "@/lib/generateCalendarEvent";
 import { useTasks, type Task, type ContentBlock } from "@/lib/hooks/useTasks";
@@ -115,6 +116,65 @@ function DraggableTaskWrapper({
         )}
       </AnimatePresence>
     </Reorder.Item>
+  );
+}
+
+/* ── Spark Block Timer ────────────────────── */
+function SparkBlock({ onDelete }: { onDelete: () => void }) {
+  const [timeLeft, setTimeLeft] = useState(60);
+  const [isActive, setIsActive] = useState(false);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isActive && timeLeft > 0) {
+      interval = setInterval(() => {
+        setTimeLeft((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [isActive, timeLeft]);
+
+  const toggleTimer = () => {
+    if (timeLeft === 0) setTimeLeft(60);
+    setIsActive(!isActive);
+  };
+
+  return (
+    <div className="fc-content-block relative group/block flex flex-col items-center justify-center p-6 text-center">
+      <h4 className="text-white font-bold tracking-wider uppercase mb-2 text-sm flex items-center gap-2">
+        <Zap size={16} className="text-amber-400" /> 1-Minute Momentum
+      </h4>
+      {timeLeft > 0 ? (
+        <>
+          <div className="text-4xl font-mono font-bold text-amber-400 mb-4 tracking-widest drop-shadow-[0_0_15px_rgba(251,191,36,0.4)]">
+            00:{timeLeft.toString().padStart(2, "0")}
+          </div>
+          <button
+            onClick={toggleTimer}
+            className="fc-add-btn px-6 py-2 rounded-lg text-white text-xs font-bold uppercase tracking-wider"
+            style={{ 
+              background: isActive ? "linear-gradient(135deg, #1A1A1A 0%, #333 100%)" : undefined,
+              boxShadow: isActive ? "none" : undefined
+            }}
+          >
+            {isActive ? "Pause" : "Ignite 🔥"}
+          </button>
+        </>
+      ) : (
+        <div className="text-amber-400 font-bold uppercase tracking-widest animate-pulse mt-2 flex items-center gap-2">
+          Momentum Achieved! 🚀
+          <button onClick={toggleTimer} className="ml-2 text-white/50 hover:text-white transition-colors" title="Restart">
+            <RotateCcw size={14} />
+          </button>
+        </div>
+      )}
+      <button
+        onClick={onDelete}
+        className="absolute top-2 right-2 opacity-0 group-hover/block:opacity-100 text-white/30 hover:text-red-400 transition-opacity"
+      >
+        <Trash2 size={14} />
+      </button>
+    </div>
   );
 }
 
@@ -431,7 +491,7 @@ export default function TaskTracker({ dateKey, onBack }: TaskTrackerProps) {
                 </button>
                 <input
                   className="flex-1 bg-transparent text-sm text-white/80 placeholder-white/25 font-mono focus:outline-none"
-                  placeholder="To-do item…"
+                  placeholder="Chunk item…"
                   value={td.text}
                   onChange={(e) => updateTodoText(task.id, block.id, td.id, e.target.value)}
                   style={{ textDecoration: td.done ? "line-through" : "none", opacity: td.done ? 0.4 : 1 }}
@@ -449,6 +509,9 @@ export default function TaskTracker({ dateKey, onBack }: TaskTrackerProps) {
             </button>
           </div>
         );
+
+      case "spark":
+        return <SparkBlock key={block.id} onDelete={() => deleteBlock(task.id, block.id)} />;
 
       default:
         return null;
@@ -853,7 +916,8 @@ export default function TaskTracker({ dateKey, onBack }: TaskTrackerProps) {
                                 { type: "image" as const, icon: ImageIcon, label: "Image", emoji: "🖼️" },
                                 { type: "link" as const, icon: Link2, label: "Link", emoji: "🔗" },
                                 { type: "music" as const, icon: Music, label: "Music", emoji: "🎵" },
-                                { type: "todo" as const, icon: CheckSquare, label: "To-Do", emoji: "☑️" },
+                                { type: "todo" as const, icon: CheckSquare, label: "Chunks", emoji: "☑️" },
+                                { type: "spark" as const, icon: Zap, label: "Spark", emoji: "⚡" },
                               ].map((b) => (
                                 <button
                                   key={b.type}

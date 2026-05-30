@@ -256,7 +256,7 @@ export default function Calendar({ onSelectDate, onOpenHappy, onOpenAnti, onOpen
                     aspect-square rounded-xl flex flex-col items-center justify-center relative
                     font-mono text-sm transition-colors duration-300 cursor-pointer
                     ${isToday
-                      ? "bg-[#E23D68] text-white font-bold shadow-[0_0_20px_#E23D68] border border-[#F68FA6]/50"
+                      ? "fc-add-btn font-bold"
                       : "text-white/50 hover:text-white/90 hover:bg-white/5 border border-transparent"
                     }
                   `}
