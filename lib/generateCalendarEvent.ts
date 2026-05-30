@@ -8,11 +8,13 @@
  * @param title  – Event / task title
  * @param date   – ISO date string "YYYY-MM-DD"
  * @param time   – 24-hour time string "HH:MM"
+ * @param description - Optional custom description for the event
  */
 export function generateCalendarEvent(
   title: string,
   date: string,
-  time: string
+  time: string,
+  description?: string
 ): void {
   // ── Parse inputs ──────────────────────────────────────
   const [year, month, day] = date.split("-").map(Number);
@@ -52,7 +54,7 @@ export function generateCalendarEvent(
     `DTSTART:${dtStart}`,
     `DTEND:${dtEnd}`,
     `SUMMARY:${title}`,
-    `DESCRIPTION:Fight Club Task — ${title}`,
+    `DESCRIPTION:${description || `Fight Club Task — ${title}`}`,
     "STATUS:CONFIRMED",
     // ── 15-minute reminder alarm ──
     "BEGIN:VALARM",

@@ -120,7 +120,15 @@ function DraggableTaskWrapper({
 }
 
 /* ── Spark Block Timer ────────────────────── */
-function SparkBlock({ onDelete }: { onDelete: () => void }) {
+function SparkBlock({
+  value,
+  onChange,
+  onDelete,
+}: {
+  value: string;
+  onChange: (val: string) => void;
+  onDelete: () => void;
+}) {
   const [timeLeft, setTimeLeft] = useState(60);
   const [isActive, setIsActive] = useState(false);
 
@@ -141,9 +149,16 @@ function SparkBlock({ onDelete }: { onDelete: () => void }) {
 
   return (
     <div className="fc-content-block relative group/block flex flex-col items-center justify-center p-6 text-center">
-      <h4 className="text-white font-bold tracking-wider uppercase mb-2 text-sm flex items-center gap-2">
+      <h4 className="text-white font-bold tracking-wider uppercase mb-3 text-sm flex items-center gap-2">
         <Zap size={16} className="text-amber-400" /> 1-Minute Momentum
       </h4>
+      <input
+        type="text"
+        placeholder="What is your initial momentum task?"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="glass-input w-full max-w-sm mb-4 px-3 py-2 text-sm text-center text-white/90 placeholder-white/30 font-mono focus:outline-none focus:border-[#E23D68]/50"
+      />
       {timeLeft > 0 ? (
         <>
           <div className="text-4xl font-mono font-bold text-amber-400 mb-4 tracking-widest drop-shadow-[0_0_15px_rgba(251,191,36,0.4)]">
@@ -157,7 +172,7 @@ function SparkBlock({ onDelete }: { onDelete: () => void }) {
               boxShadow: isActive ? "none" : undefined
             }}
           >
-            {isActive ? "Pause" : "Ignite 🔥"}
+            {isActive ? "Pause" : "Ignite"}
           </button>
         </>
       ) : (
@@ -511,7 +526,14 @@ export default function TaskTracker({ dateKey, onBack }: TaskTrackerProps) {
         );
 
       case "spark":
-        return <SparkBlock key={block.id} onDelete={() => deleteBlock(task.id, block.id)} />;
+        return (
+          <SparkBlock
+            key={block.id}
+            value={block.value}
+            onChange={(val) => updateBlock(task.id, block.id, val)}
+            onDelete={() => deleteBlock(task.id, block.id)}
+          />
+        );
 
       default:
         return null;
@@ -881,7 +903,14 @@ export default function TaskTracker({ dateKey, onBack }: TaskTrackerProps) {
                               onClick={() => {
                                 const time = taskTimes[task.id];
                                 if (!time) return;
-                                generateCalendarEvent(task.text, dateKey, time);
+
+                                const sparkBlock = task.blocks.find((b) => b.type === "spark");
+                                let description = `Fight Club Task — ${task.text}`;
+                                if (sparkBlock && sparkBlock.value) {
+                                  description += `\n\n1-Minute Momentum:\n${sparkBlock.value}`;
+                                }
+
+                                generateCalendarEvent(task.text, dateKey, time, description);
                                 setShowTimePicker(null);
                               }}
                               disabled={!taskTimes[task.id]}
