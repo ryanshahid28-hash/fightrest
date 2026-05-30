@@ -157,13 +157,9 @@ export default function LoginPage() {
               type="submit"
               disabled={submitting}
               id="login-submit"
-              className="w-full px-5 py-4 rounded-xl text-white font-bold text-lg uppercase tracking-wider
-                         disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-[1.02]
+              className="fc-add-btn w-full px-5 py-4 rounded-xl text-white font-bold text-lg uppercase tracking-wider
+                         disabled:opacity-50 disabled:cursor-not-allowed
                          flex items-center justify-center gap-2 mt-6"
-              style={{ 
-                backgroundColor: '#E23D68', 
-                boxShadow: '0 0 20px #E23D68, 0 0 40px rgba(226, 61, 104, 0.4)',
-              }}
             >
               {submitting ? (
                 <Loader2 size={24} className="animate-spin" />

@@ -283,11 +283,7 @@ export default function Calendar({ onSelectDate, onOpenHappy, onOpenAnti, onOpen
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           onClick={() => onSelectDate(todayKey)}
-          className="px-10 py-4 rounded-xl text-white font-bold text-xl uppercase tracking-wider transition-all"
-          style={{ 
-            backgroundColor: '#E23D68', 
-            boxShadow: '0 0 20px #E23D68, 0 0 40px rgba(226, 61, 104, 0.4)',
-          }}
+          className="fc-add-btn px-10 py-4 rounded-xl text-white font-bold text-xl uppercase tracking-wider"
         >
           FIGHT TODAY
         </motion.button>
