@@ -40,7 +40,7 @@ export default function LoginPage() {
       // Map common Supabase errors to friendlier messages
       const msg = err.message;
       if (msg.includes("Invalid login credentials")) {
-        setError("Wrong email or password. Check your credentials and try again.");
+        setError("You must join Fight Club first.");
       } else if (msg.includes("Email not confirmed")) {
         setError("Please confirm your email before signing in.");
       } else {
